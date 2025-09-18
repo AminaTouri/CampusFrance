@@ -68,6 +68,17 @@ namespace CampusFrance.Tests
             {
                 Console.WriteLine("⚠️ Bannière cookies absente.");
             }
+                // 2. Masquer ou ignorer le bouton "tarteaucitronManager" s’il bloque les clics
+            try
+            {
+                var managerButton = driver.FindElement(By.Id("tarteaucitronManager"));
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.display='none';", managerButton);
+                Console.WriteLine("✅ Bouton tarteaucitronManager masqué.");
+            }
+            catch (NoSuchElementException)
+            {
+                Console.WriteLine("⚠️ Bouton tarteaucitronManager absent.");
+            }
         }
 
 
