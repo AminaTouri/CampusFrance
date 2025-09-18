@@ -56,14 +56,24 @@ namespace CampusFrance.Tests
         {
             try
             {
-                var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(
-                    By.CssSelector("#tarteaucitronPersonalize2")));
+                var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
                 boutonAccepter.Click();
-                Console.WriteLine("✅ Bannière cookies fermée.");
+
+                // 🔄 Attendre que la bannière disparaisse complètement
+                wait.Until(ExpectedConditions.InvisibilityOfElementLocated(By.Id("tarteaucitronManager")));
+    
+                Console.WriteLine("✅ Bannière de cookies fermée.");
             }
-            catch (WebDriverTimeoutException) { }
-            catch (NoSuchElementException) { }
-        }
+            catch (WebDriverTimeoutException)
+            {
+                Console.WriteLine("⏱️ Aucune bannière de cookies trouvée (timeout).");
+            }
+            catch (NoSuchElementException)
+            {
+                Console.WriteLine("🔍 Aucune bannière de cookies détectée.");
+            }
+
+     }
 
         // MÉTHODE PRINCIPALE
         private void RemplirFormulaire(UserRegistrationData user)
