@@ -55,7 +55,7 @@ namespace CampusFrance.Tests
         {
             try
             {
-                var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("#tarteaucitronPersonalize2")));
+                var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
                 boutonAccepter.Click();
                 Thread.Sleep(500); // attendre que la popup disparaisse
                 Console.WriteLine("✅ Bannière de cookies fermée.");
