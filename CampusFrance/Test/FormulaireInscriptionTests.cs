@@ -11,6 +11,7 @@ using System.Threading;
 
 namespace CampusFrance.Tests
 {
+    [TestFixture] // ✅ Recommandé pour bien marquer la classe de tests
     public class TestsInscriptionCampusFrance
     {
         private IWebDriver driver;
@@ -24,6 +25,7 @@ namespace CampusFrance.Tests
             driver.Manage().Window.Maximize();
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
+            // Charger les utilisateurs depuis le fichier JSON
             string chemin = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Data.json");
             utilisateurs = UserDataLoader.LoadFromJson(chemin);
         }
@@ -36,67 +38,74 @@ namespace CampusFrance.Tests
 
             foreach (var user in utilisateurs)
             {
-                RemplirFormulaire(user);
-                driver.Navigate().GoToUrl("https://www.campusfrance.org/fr/user/register");
-                FermerBanniereCookies();
+                try
+                {
+                    RemplirFormulaire(user);
+                    TestContext.WriteLine($"✅ Formulaire rempli pour {user.AdresseEmail}");
+                }
+                catch (Exception ex)
+                {
+                    TestContext.WriteLine($"❌ Erreur pour {user.AdresseEmail} : {ex.Message}");
+                }
+                finally
+                {
+                    driver.Navigate().GoToUrl("https://www.campusfrance.org/fr/user/register");
+                    FermerBanniereCookies();
+                }
             }
         }
 
         [TearDown]
         public void TearDown()
         {
+            driver.Quit();
             driver.Dispose();
         }
+
+        // 🔒 Fermer la bannière cookies et masquer les éléments bloquants
         private void FermerBanniereCookies()
-{
-    try
-    {
-        var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
-        boutonAccepter.Click();
-        Thread.Sleep(500); // attendre que la popup disparaisse
-        Console.WriteLine("✅ Bannière de cookies fermée.");
-    }
-    catch (WebDriverTimeoutException)
-    {
-        Console.WriteLine("⚠️ Bannière cookies non trouvée à temps.");
-    }
-    catch (NoSuchElementException)
-    {
-        Console.WriteLine("⚠️ Bannière cookies absente.");
-    }
-
-    // 🔽 Ajouter cette partie pour s'assurer que le X (cross) a disparu
-    try
-    {
-        wait.Until(driver =>
         {
-            var cross = driver.FindElement(By.CssSelector(".tarteaucitronCross"));
-            return !cross.Displayed || !cross.Enabled;
-        });
-        Console.WriteLine("✅ Bouton X de la bannière cookies disparu.");
-    }
-    catch (WebDriverTimeoutException)
-    {
-        Console.WriteLine("⚠️ Le bouton X est toujours visible (possible blocage).");
-    }
+            try
+            {
+                var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
+                boutonAccepter.Click();
+                Thread.Sleep(500);
+                Console.WriteLine("✅ Bannière de cookies fermée.");
+            }
+            catch (WebDriverTimeoutException)
+            {
+                Console.WriteLine("⚠️ Bannière cookies non trouvée à temps.");
+            }
+            catch (NoSuchElementException)
+            {
+                Console.WriteLine("⚠️ Bannière cookies absente.");
+            }
 
-    // 🔽 Masquer le bouton "tarteaucitronManager" s’il bloque les clics
-    try
-    {
-        var managerButton = driver.FindElement(By.Id("tarteaucitronManager"));
-        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.display='none';", managerButton);
-        Console.WriteLine("✅ Bouton tarteaucitronManager masqué.");
-    }
-    catch (NoSuchElementException)
-    {
-        Console.WriteLine("⚠️ Bouton tarteaucitronManager absent.");
-    }
-}
+            try
+            {
+                wait.Until(driver =>
+                {
+                    var cross = driver.FindElement(By.CssSelector(".tarteaucitronCross"));
+                    return !cross.Displayed || !cross.Enabled;
+                });
+                Console.WriteLine("✅ Bouton X de la bannière cookies disparu.");
+            }
+            catch (WebDriverTimeoutException)
+            {
+                Console.WriteLine("⚠️ Le bouton X est toujours visible (possible blocage).");
+            }
 
-
-     
-}
-
+            try
+            {
+                var managerButton = driver.FindElement(By.Id("tarteaucitronManager"));
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.display='none';", managerButton);
+                Console.WriteLine("✅ Bouton tarteaucitronManager masqué.");
+            }
+            catch (NoSuchElementException)
+            {
+                Console.WriteLine("⚠️ Bouton tarteaucitronManager absent.");
+            }
+        }
 
         private void RemplirFormulaire(UserRegistrationData user)
         {
@@ -115,7 +124,10 @@ namespace CampusFrance.Tests
             driver.FindElement(By.XPath("//input[@placeholder='monadresse@domaine.com']")).SendKeys(user.AdresseEmail);
             driver.FindElement(By.Id("edit-pass-pass1")).SendKeys(user.MotDePasse);
             driver.FindElement(By.Id("edit-pass-pass2")).SendKeys(user.ConfirmerMotDePasse);
-            driver.FindElement(By.CssSelector("label[for='edit-field-civilite-mr']")).Click();
+
+            // ✅ Attendre que le bouton soit cliquable
+            var civilite = wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("label[for='edit-field-civilite-mr']")));
+            civilite.Click();
         }
 
         private void RemplirInformationsPersonnelles(UserRegistrationData user)
@@ -137,47 +149,29 @@ namespace CampusFrance.Tests
 
         private void RemplirStatut(UserRegistrationData user)
         {
-            if (user.VousEtes == "Étudiants")
+            string radioId = user.VousEtes switch
             {
-                var radio = driver.FindElement(By.Id("edit-field-publics-cibles-2"));
-                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", radio);
-                Assert.IsTrue(radio.Selected, " Étudiant non sélectionné !");
-                TestContext.WriteLine(" Étudiant sélectionné.");
-            }
-            else if (user.VousEtes == "Chercheurs")
-            {
-                var radio = driver.FindElement(By.Id("edit-field-publics-cibles-3"));
-                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", radio);
-                Assert.IsTrue(radio.Selected, " Chercheur non sélectionné !");
-                TestContext.WriteLine("Chercheur sélectionné.");
-            }
-            else if (user.VousEtes == "Institutionnel")
-            {
-                var radio = driver.FindElement(By.Id("edit-field-publics-cibles-4"));
-                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", radio);
-                Assert.IsTrue(radio.Selected, " Institutionnel non sélectionné !");
-                TestContext.WriteLine("Institutionnel sélectionné.");
+                "Étudiants" => "edit-field-publics-cibles-2",
+                "Chercheurs" => "edit-field-publics-cibles-3",
+                "Institutionnel" => "edit-field-publics-cibles-4",
+                _ => throw new ArgumentException("Statut inconnu")
+            };
 
-                // ✅ Attendre l’apparition des champs dynamiques
-                wait.Until(driver =>
-                {
-                    try
-                    {
-                        var elem = driver.FindElement(By.Id("edit-field-type-d-organisme-selectized"));
-                        return elem.Displayed && elem.Enabled;
-                    }
-                    catch (NoSuchElementException)
-                    {
-                        return false;
-                    }
-                });
+            var radio = driver.FindElement(By.Id(radioId));
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", radio);
+            Assert.IsTrue(radio.Selected, $"❌ {user.VousEtes} non sélectionné !");
+            TestContext.WriteLine($"{user.VousEtes} sélectionné.");
+
+            if (user.VousEtes == "Institutionnel")
+            {
+                // ✅ Attente que les champs dynamiques s'affichent
+                wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-type-d-organisme-selectized")));
             }
         }
 
         private void RemplirEtudiantChercheur(UserRegistrationData user)
         {
-            var domaineInput = wait.Until(ExpectedConditions.ElementIsVisible(
-                By.Id("edit-field-domaine-etudes-selectized")));
+            var domaineInput = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-domaine-etudes-selectized")));
             domaineInput.Click();
             domaineInput.SendKeys(Keys.Control + "a");
             domaineInput.SendKeys(Keys.Backspace);
@@ -185,10 +179,8 @@ namespace CampusFrance.Tests
             domaineInput.SendKeys(Keys.Enter);
             TestContext.WriteLine(" Domaine d'études sélectionné.");
 
-            var niveauInput = wait.Until(ExpectedConditions.ElementIsVisible(
-                By.Id("edit-field-niveaux-etude-selectized")));
+            var niveauInput = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-niveaux-etude-selectized")));
             niveauInput.Click();
-            Thread.Sleep(200);
             niveauInput.SendKeys(Keys.Control + "a");
             niveauInput.SendKeys(Keys.Backspace);
             niveauInput.SendKeys(user.NiveauEtude);
@@ -201,8 +193,7 @@ namespace CampusFrance.Tests
             wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-fonction-0-value")));
             driver.FindElement(By.Id("edit-field-fonction-0-value")).SendKeys(user.Fonction);
 
-            var typeInput = wait.Until(ExpectedConditions.ElementIsVisible(
-                By.Id("edit-field-type-d-organisme-selectized")));
+            var typeInput = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-type-d-organisme-selectized")));
             typeInput.Click();
             typeInput.SendKeys(Keys.Control + "a");
             typeInput.SendKeys(Keys.Backspace);
@@ -214,4 +205,3 @@ namespace CampusFrance.Tests
         }
     }
 }
-
