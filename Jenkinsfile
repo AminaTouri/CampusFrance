@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        dotnetsdk 'dotnet8'  // Nom que tu as donné dans Jenkins → Géré dans "Global Tool Configuration"
+        dotnetsdk 'dotnet8'
     }
 
     stages {
@@ -21,13 +21,14 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat 'dotnet test --no-build --logger "trx;LogFileName=TestResults.trx"'
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat 'dotnet test --no-build --logger "trx;LogFileName=TestResults.trx"'
+                }
             }
         }
 
         stage('Generate HTML Report') {
             steps {
-                // Génère le rapport HTML à partir du .trx avec ReportGenerator
                 bat '''
                     dotnet tool install --global dotnet-reportgenerator-globaltool
                     set PATH=%PATH%;%USERPROFILE%\\.dotnet\\tools
@@ -39,14 +40,13 @@ pipeline {
 
     post {
         always {
-            // Publier le rapport HTML dans Jenkins
             publishHTML(target: [
                 reportName: 'Rapport des tests automatisés',
-                reportDir: 'TestReport',          // Dossier généré par ReportGenerator
-                reportFiles: 'index.html',        // Fichier principal du rapport
+                reportDir: 'TestReport',
+                reportFiles: 'index.html',
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
-                allowMissing: false
+                allowMissing: true
             ])
         }
     }
