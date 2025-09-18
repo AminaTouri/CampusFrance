@@ -47,14 +47,13 @@ namespace CampusFrance.Tests
         {
             driver.Dispose();
         }
-
-       private void FermerBanniereCookies()
+        private void FermerBanniereCookies()
 {
     try
     {
         var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
         boutonAccepter.Click();
-        Thread.Sleep(1000); // Petit délai pour laisser la popup disparaître
+        Thread.Sleep(500); // attendre que la popup disparaisse
         Console.WriteLine("✅ Bannière de cookies fermée.");
     }
     catch (WebDriverTimeoutException)
@@ -66,18 +65,22 @@ namespace CampusFrance.Tests
         Console.WriteLine("⚠️ Bannière cookies absente.");
     }
 
-    // Attendre que le bouton "X" disparaisse vraiment de la page
+    // 🔽 Ajouter cette partie pour s'assurer que le X (cross) a disparu
     try
     {
-        wait.Until(ExpectedConditions.InvisibilityOfElementLocated(By.CssSelector(".tarteaucitronCross")));
+        wait.Until(driver =>
+        {
+            var cross = driver.FindElement(By.CssSelector(".tarteaucitronCross"));
+            return !cross.Displayed || !cross.Enabled;
+        });
         Console.WriteLine("✅ Bouton X de la bannière cookies disparu.");
     }
     catch (WebDriverTimeoutException)
     {
-        Console.WriteLine("⚠️ Le bouton X ne s’est pas fermé à temps.");
+        Console.WriteLine("⚠️ Le bouton X est toujours visible (possible blocage).");
     }
 
-    // Ensuite, masquer complètement le bouton principal si nécessaire
+    // 🔽 Masquer le bouton "tarteaucitronManager" s’il bloque les clics
     try
     {
         var managerButton = driver.FindElement(By.Id("tarteaucitronManager"));
@@ -88,6 +91,10 @@ namespace CampusFrance.Tests
     {
         Console.WriteLine("⚠️ Bouton tarteaucitronManager absent.");
     }
+}
+
+
+     
 }
 
 
