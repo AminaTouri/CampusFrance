@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        dotnet 'dotnet8'  // Nom que tu as donné dans Jenkins
+    dotnetsdk 'dotnet8'  // ✅ Correct : correspond au type reconnu par Jenkins
     }
 
     stages {
