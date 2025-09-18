@@ -203,7 +203,7 @@ namespace CampusFrance.Tests
             typeInput.SendKeys(Keys.Enter);
 
             // Nom de l’organisme
-            driver.FindElement(By.Id("edit-field-nom-de-l-organisme-0-value")).SendKeys(user.NomOrganisme);
+            driver.FindElement(By.Id("edit-field-nom-organisme-0-value")).SendKeys(user.NomOrganisme);
             TestContext.WriteLine("Informations institutionnelles saisies.");
         }
     }
