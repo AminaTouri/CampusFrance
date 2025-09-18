@@ -48,35 +48,48 @@ namespace CampusFrance.Tests
             driver.Dispose();
         }
 
-        private void FermerBanniereCookies()
-        {
-            try
-            {
-                var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
-                boutonAccepter.Click();
-                Thread.Sleep(500);
-                Console.WriteLine("✅ Bannière de cookies fermée.");
-            }
-            catch (WebDriverTimeoutException)
-            {
-                Console.WriteLine("⚠️ Bannière cookies non trouvée à temps.");
-            }
-            catch (NoSuchElementException)
-            {
-                Console.WriteLine("⚠️ Bannière cookies absente.");
-            }
+       private void FermerBanniereCookies()
+{
+    try
+    {
+        var boutonAccepter = wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("tarteaucitronPersonalize2")));
+        boutonAccepter.Click();
+        Thread.Sleep(500); // Petit délai pour laisser la popup disparaître
+        Console.WriteLine("✅ Bannière de cookies fermée.");
+    }
+    catch (WebDriverTimeoutException)
+    {
+        Console.WriteLine("⚠️ Bannière cookies non trouvée à temps.");
+    }
+    catch (NoSuchElementException)
+    {
+        Console.WriteLine("⚠️ Bannière cookies absente.");
+    }
 
-            try
-            {
-                var managerButton = driver.FindElement(By.Id("tarteaucitronManager"));
-                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.display='none';", managerButton);
-                Console.WriteLine("✅ Bouton tarteaucitronManager masqué.");
-            }
-            catch (NoSuchElementException)
-            {
-                Console.WriteLine("⚠️ Bouton tarteaucitronManager absent.");
-            }
-        }
+    // Attendre que le bouton "X" disparaisse vraiment de la page
+    try
+    {
+        wait.Until(ExpectedConditions.InvisibilityOfElementLocated(By.CssSelector(".tarteaucitronCross")));
+        Console.WriteLine("✅ Bouton X de la bannière cookies disparu.");
+    }
+    catch (WebDriverTimeoutException)
+    {
+        Console.WriteLine("⚠️ Le bouton X ne s’est pas fermé à temps.");
+    }
+
+    // Ensuite, masquer complètement le bouton principal si nécessaire
+    try
+    {
+        var managerButton = driver.FindElement(By.Id("tarteaucitronManager"));
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.display='none';", managerButton);
+        Console.WriteLine("✅ Bouton tarteaucitronManager masqué.");
+    }
+    catch (NoSuchElementException)
+    {
+        Console.WriteLine("⚠️ Bouton tarteaucitronManager absent.");
+    }
+}
+
 
         private void RemplirFormulaire(UserRegistrationData user)
         {
