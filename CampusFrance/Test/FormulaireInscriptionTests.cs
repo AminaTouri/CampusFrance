@@ -187,7 +187,8 @@ namespace CampusFrance.Tests
         }
 
         private void RemplirInstitutionnel(UserRegistrationData user)
-        {
+        { 
+        
             wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-fonction-0-value")));
             driver.FindElement(By.Id("edit-field-fonction-0-value")).SendKeys(user.Fonction);
 
