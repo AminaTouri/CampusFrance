@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace CampusFrance.Tests
 {
-    [TestFixture] // ✅ Recommandé pour bien marquer la classe de tests
+    [TestFixture]
     public class TestsInscriptionCampusFrance
     {
         private IWebDriver driver;
@@ -25,7 +25,6 @@ namespace CampusFrance.Tests
             driver.Manage().Window.Maximize();
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
-            // Charger les utilisateurs depuis le fichier JSON
             string chemin = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Data.json");
             utilisateurs = UserDataLoader.LoadFromJson(chemin);
         }
@@ -62,7 +61,6 @@ namespace CampusFrance.Tests
             driver.Dispose();
         }
 
-        // 🔒 Fermer la bannière cookies et masquer les éléments bloquants
         private void FermerBanniereCookies()
         {
             try
@@ -125,9 +123,10 @@ namespace CampusFrance.Tests
             driver.FindElement(By.Id("edit-pass-pass1")).SendKeys(user.MotDePasse);
             driver.FindElement(By.Id("edit-pass-pass2")).SendKeys(user.ConfirmerMotDePasse);
 
-            // ✅ Attendre que le bouton soit cliquable
-            var civilite = wait.Until(ExpectedConditions.ElementToBeClickable(By.CssSelector("label[for='edit-field-civilite-mr']")));
-            civilite.Click();
+            // ✅ Scroll + click JS pour éviter l'erreur "element click intercepted"
+            var civiliteLabel = wait.Until(ExpectedConditions.ElementExists(By.CssSelector("label[for='edit-field-civilite-mr']")));
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].scrollIntoView(true); arguments[0].click();", civiliteLabel);
+            TestContext.WriteLine("✅ Civilité sélectionnée avec scroll + JS click.");
         }
 
         private void RemplirInformationsPersonnelles(UserRegistrationData user)
@@ -164,7 +163,6 @@ namespace CampusFrance.Tests
 
             if (user.VousEtes == "Institutionnel")
             {
-                // ✅ Attente que les champs dynamiques s'affichent
                 wait.Until(ExpectedConditions.ElementIsVisible(By.Id("edit-field-type-d-organisme-selectized")));
             }
         }
