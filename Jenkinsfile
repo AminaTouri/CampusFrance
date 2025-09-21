@@ -1,53 +1,54 @@
 pipeline {
-    agent any // Utilise n’importe quel agent Jenkins disponible
+    agent any
 
     tools {
-        dotnetsdk 'dotnet8' // Déclare l’utilisation du SDK .NET 8 installé dans Jenkins
+        dotnetsdk 'dotnet8'
     }
 
     stages {
-        stage('Checkout') { // Étape 1 : Récupérer le code source depuis GitHub
+        stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/AminaTouri/CampusFrance.git'
             }
         }
 
-        stage('Restore & Build') { // Étape 2 : Restaurer les packages et compiler le projet
+        stage('Restore & Build') {
             steps {
-                bat 'dotnet restore' // Restaure les dépendances NuGet
-                bat 'dotnet build --no-restore' // Compile les projets .NET (sans refaire restore)
+                bat 'dotnet restore'
+                bat 'dotnet build --no-restore'
             }
         }
 
-        stage('Run Tests') { // Étape 3 : Exécuter les tests automatisés (Selenium/NUnit)
+        stage('Run Tests with Coverage') {
             steps {
-                // En cas d’erreur dans les tests, on continue le pipeline (build UNSTABLE)
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    bat 'dotnet test --no-build --logger "trx;LogFileName=TestResults.trx"' 
-                    // Génère un fichier .trx avec les résultats des tests
+                    bat '''
+                        dotnet test --no-build --logger "trx;LogFileName=TestResults.trx" ^
+                        /p:CollectCoverage=true ^
+                        /p:CoverletOutputFormat=cobertura ^
+                        /p:CoverletOutput=TestResults\\coverage.xml
+                    '''
                 }
             }
         }
 
-        stage('Generate HTML Report') { // Étape 4 : Générer un rapport de test lisible en HTML
+        stage('Generate HTML Report') {
             steps {
                 bat '''
                     dotnet tool install --global dotnet-reportgenerator-globaltool
                     set PATH=%PATH%;%USERPROFILE%\\.dotnet\\tools
-                    reportgenerator -reports:**/TestResults.trx -targetdir:TestReport -reporttypes:Html
-                    '''
-                // Utilise "reportgenerator" pour transformer .trx en rapport HTML dans "TestReport"
+                    reportgenerator -reports:TestResults/coverage.xml -targetdir:TestReport -reporttypes:Html
+                '''
             }
         }
     }
 
     post {
         always {
-            // Étape 5 : Publier le rapport HTML dans Jenkins à la fin, même si les tests échouent
             publishHTML(target: [
-                reportName: 'Rapport des tests automatisés', // Nom affiché dans Jenkins
-                reportDir: 'TestReport', // Dossier contenant le fichier HTML
-                reportFiles: 'index.html', // Fichier HTML principal du rapport
+                reportName: 'Rapport des tests automatisés',
+                reportDir: 'TestReport',
+                reportFiles: 'index.html',
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
                 allowMissing: true
@@ -55,3 +56,4 @@ pipeline {
         }
     }
 }
+
