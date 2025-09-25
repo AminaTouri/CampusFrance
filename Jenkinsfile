@@ -26,7 +26,8 @@ pipeline {
                         dotnet test --no-build --logger "trx;LogFileName=TestResults.trx" ^
                         /p:CollectCoverage=true ^
                         /p:CoverletOutputFormat=cobertura ^
-                        /p:CoverletOutput=TestResults\\coverage.xml
+                        /p:CoverletOutput=TestResults\\coverage.xml ^
+                        -v:n
                     '''
                 }
             }
@@ -35,9 +36,10 @@ pipeline {
         stage('Generate HTML Report') {
             steps {
                 bat '''
-                    dotnet tool install --global dotnet-reportgenerator-globaltool
+                    dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
                     set PATH=%PATH%;%USERPROFILE%\\.dotnet\\tools
-                    reportgenerator -reports:TestResults/coverage.xml -targetdir:TestReport -reporttypes:Html
+                    reportgenerator -reports:TestResults\\coverage.xml -targetdir:TestReport -reporttypes:Html
+                    dir TestReport
                 '''
             }
         }
@@ -56,4 +58,3 @@ pipeline {
         }
     }
 }
-
