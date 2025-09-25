@@ -23,11 +23,11 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
-                        dotnet test --no-build --logger "trx;LogFileName=TestResults.trx" ^
+                        dotnet test CampusFrance/CampusFrance.Test.csproj --no-build ^
+                        --logger "trx;LogFileName=TestResults.trx" ^
                         /p:CollectCoverage=true ^
                         /p:CoverletOutputFormat=cobertura ^
-                        /p:CoverletOutput=TestResults\\coverage.xml ^
-                        -v:n
+                        /p:CoverletOutput=TestResults\\coverage.xml
                     '''
                 }
             }
@@ -36,9 +36,12 @@ pipeline {
         stage('Generate HTML Report') {
             steps {
                 bat '''
-                    dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
+                    dotnet tool install --global dotnet-reportgenerator-globaltool
                     set PATH=%PATH%;%USERPROFILE%\\.dotnet\\tools
-                    reportgenerator -reports:TestResults\\coverage.xml -targetdir:TestReport -reporttypes:Html
+                    reportgenerator ^
+                        -reports:TestResults\\coverage.xml ^
+                        -targetdir:TestReport ^
+                        -reporttypes:Html
                     dir TestReport
                 '''
             }
@@ -51,10 +54,4 @@ pipeline {
                 reportName: 'Rapport des tests automatisés',
                 reportDir: 'TestReport',
                 reportFiles: 'index.html',
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                allowMissing: true
-            ])
-        }
-    }
-}
+                alwaysLi
