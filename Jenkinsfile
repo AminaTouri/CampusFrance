@@ -36,10 +36,9 @@ pipeline {
 
         stage('Generate HTML Report') {
             steps {
-                bat 'dotnet tool install --global dotnet-reportgenerator-globaltool'
+                bat 'dotnet tool install dotnet-reportgenerator-globaltool --tool-path tools'
                 bat '''
-                    set PATH=%PATH%;%USERPROFILE%\\.dotnet\\tools
-                    reportgenerator ^
+                    tools\\reportgenerator ^
                         -reports:CampusFrance\\CampusFrance\\TestResults\\coverage.cobertura.xml ^
                         -targetdir:TestReport ^
                         -reporttypes:Html
