@@ -20,19 +20,19 @@ pipeline {
         }
 
         stage('Run Tests with Coverage') {
-            steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    bat '''
-                        dotnet test CampusFrance/CampusFrance.Test.csproj --no-build ^
-                        --logger "trx;LogFileName=TestResults.trx" ^
-                        /p:CollectCoverage=true ^
-                        /p:CoverletOutputFormat=cobertura ^
-                        /p:CoverletOutput=TestResults/coverage.xml ^
-                        /p:Include="[*]*"
-                    '''
-                }
-            }
+    steps {
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+            bat '''
+                dotnet test CampusFrance/CampusFrance.Test.csproj --no-build ^
+                --logger "trx;LogFileName=TestResults.trx" ^
+                /p:CollectCoverage=true ^
+                /p:CoverletOutputFormat=cobertura ^
+                /p:CoverletOutput=CampusFrance/TestResults/coverage.xml ^
+                /p:Include="[*]*"
+            '''
         }
+    }
+}
 
         stage('Generate HTML Report') {
             steps {
