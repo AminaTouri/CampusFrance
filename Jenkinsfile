@@ -27,7 +27,7 @@ pipeline {
                         --logger "trx;LogFileName=TestResults.trx" ^
                         /p:CollectCoverage=true ^
                         /p:CoverletOutputFormat=cobertura ^
-                        /p:CoverletOutput=../TestResults/coverage.xml ^
+                        /p:CoverletOutput=TestResults/coverage.xml ^
                         /p:Include="[*]*"
                     '''
                 }
