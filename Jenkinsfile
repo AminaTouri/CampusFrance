@@ -54,4 +54,10 @@ pipeline {
                 reportName: 'Rapport des tests automatisés',
                 reportDir: 'TestReport',
                 reportFiles: 'index.html',
-                alwaysLi
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                allowMissing: true
+            ])
+        }
+    }
+}
