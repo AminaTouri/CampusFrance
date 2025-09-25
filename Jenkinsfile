@@ -27,7 +27,7 @@ pipeline {
                             --logger "trx;LogFileName=TestResults.trx" ^
                             /p:CollectCoverage=true ^
                             /p:CoverletOutputFormat=cobertura ^
-                            /p:CoverletOutput=CampusFrance/TestResults/ ^
+                            /p:CoverletOutput=CampusFrance/CampusFrance/TestResults/ ^
                             /p:Include="[*]*"
                     """
                 }
@@ -37,13 +37,13 @@ pipeline {
         stage('Generate HTML Report') {
             steps {
                 bat 'dotnet tool install --global dotnet-reportgenerator-globaltool'
-                bat """
+                bat '''
                     set PATH=%PATH%;%USERPROFILE%\\.dotnet\\tools
                     reportgenerator ^
-                        -reports:CampusFrance\\TestResults\\coverage.cobertura.xml ^
+                        -reports:CampusFrance\\CampusFrance\\TestResults\\coverage.cobertura.xml ^
                         -targetdir:TestReport ^
                         -reporttypes:Html
-                """
+                '''
             }
         }
     }
